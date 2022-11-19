@@ -26,11 +26,13 @@ Renderer::Renderer(SDL_Window* pWindow) :
 
 	//Initialize Camera
 	m_Camera.Initialize(60.f, { .0f,.0f,-10.f });
+
+	m_pDepthBufferPixels = new float[m_Width * m_Height] {INFINITY};
 }
 
 Renderer::~Renderer()
 {
-	//delete[] m_pDepthBufferPixels;
+	delete[] m_pDepthBufferPixels;
 }
 
 void Renderer::Update(Timer* pTimer)
@@ -44,26 +46,75 @@ void Renderer::Render()
 	//Lock BackBuffer
 	SDL_LockSurface(m_pBackBuffer);
 
-	//RENDER LOGIC
-	for (int px{}; px < m_Width; ++px)
+	const int pixelCount{ m_Width * m_Height };
+	std::fill_n(m_pDepthBufferPixels, pixelCount, INFINITY);
+
+	SDL_FillRect(m_pBackBuffer, NULL, SDL_MapRGB(m_pBackBuffer->format, 100, 100, 100));
+
+	std::vector<Vertex> vertices_world
 	{
-		for (int py{}; py < m_Height; ++py)
+		//Triangle 0
+		{ {0.f,2.f,0.f},    {1,0,0} },
+		{ {1.5f,-1.f,0.f},  {1,0,0} },
+		{ {-1.5f,-1.f,0.f}, {1,0,0} },
+
+		//Triangle 1
+		{ {0.f,4.f,2.f},   {1,0,0} },
+		{ {3.f,-2.f,2.f},  {0,1,0} },
+		{ {-3.f,-2.f,2.f}, {0,0,1} }
+	};
+
+	VertexTransformationFunction(vertices_world, vertices_world);
+
+	//RENDER LOGIC
+	for (size_t trIndex = 0; trIndex < vertices_world.size(); trIndex+=3)
+	{
+		Vector2 v0{ vertices_world[trIndex].position.GetXY()};
+		Vector2 v1{ vertices_world[trIndex + 1].position.GetXY() };
+		Vector2 v2{ vertices_world[trIndex + 2].position.GetXY() };
+
+		Vector2 topLeft{};
+		topLeft.x = std::min(std::min(v0.x, v1.x), v2.x);
+		topLeft.y = std::min(std::min(v0.y, v1.y), v2.y);
+
+		Vector2 bottomRight{};
+		bottomRight.x = std::max(std::max(v0.x, v1.x), v2.x);
+		bottomRight.y = std::max(std::max(v0.y, v1.y), v2.y);
+
+
+		Vector3 weight{};
+		for (int px{}; px < m_Width; ++px)
 		{
-			float gradient = px / static_cast<float>(m_Width);
-			gradient += py / static_cast<float>(m_Width);
-			gradient /= 2.0f;
+			if (px < topLeft.x || px > bottomRight.x)
+				continue;
 
-			ColorRGB finalColor{ gradient, gradient, gradient };
+			for (int py{}; py < m_Height; ++py)
+			{			
+				if (py < topLeft.y || py > bottomRight.y)
+					continue;
 
-			//Update Color in Buffer
-			finalColor.MaxToOne();
+				if (Utils::HitTest_Triangle(Vector2{ static_cast<float>(px), static_cast<float>(py) }, v0,v1,v2, weight))
+				{
+					float currentDepth = vertices_world[trIndex].position.z * weight.x + vertices_world[trIndex].position.z * weight.y + vertices_world[trIndex].position.z * weight.z;
+					if (currentDepth < m_pDepthBufferPixels[py * m_Width + px ])
+					{
+						m_pDepthBufferPixels[py * m_Width + px ] = currentDepth;
+						ColorRGB finalColor = vertices_world[trIndex].color * weight.x + vertices_world[trIndex + 1].color * weight.y + vertices_world[trIndex+2].color * weight.z;
 
-			m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
+						//Update Color in Buffer
+						finalColor.MaxToOne();
+
+						m_pBackBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBackBuffer->format,
+							static_cast<uint8_t>(finalColor.r * 255),
+							static_cast<uint8_t>(finalColor.g * 255),
+							static_cast<uint8_t>(finalColor.b * 255));
+					}
+				}	
+			}
 		}
 	}
+
+	
 
 	//@END
 	//Update SDL Surface
@@ -74,10 +125,31 @@ void Renderer::Render()
 
 void Renderer::VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const
 {
-	//Todo > W1 Projection Stage
+	float aspectRatio{ static_cast<float>(m_Width) / m_Height };
+
+	for (size_t i = 0; i < vertices_in.size(); i++)
+	{
+		vertices_out[i] = vertices_in[i];
+
+		vertices_out[i].position = m_Camera.viewMatrix.TransformPoint(vertices_out[i].position);
+
+		//Perspective Divide
+		vertices_out[i].position.x = vertices_out[i].position.x / vertices_out[i].position.z;
+		vertices_out[i].position.y = vertices_out[i].position.y / vertices_out[i].position.z;
+
+		//FOV + AR
+		vertices_out[i].position.x = vertices_out[i].position.x / (m_Camera.fov * aspectRatio);
+		vertices_out[i].position.y = vertices_out[i].position.y / (m_Camera.fov);
+
+
+		vertices_out[i].position.x = (vertices_out[i].position.x + 1) / 2 * m_Width;
+		vertices_out[i].position.y = (1 - vertices_out[i].position.y) / 2 * m_Height;
+	}
+
 }
 
 bool Renderer::SaveBufferToImage() const
 {
+
 	return SDL_SaveBMP(m_pBackBuffer, "Rasterizer_ColorBuffer.bmp");
 }

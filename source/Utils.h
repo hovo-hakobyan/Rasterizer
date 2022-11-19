@@ -172,5 +172,42 @@ namespace dae
 #endif
 		}
 #pragma warning(pop)
+
+		inline bool HitTest_Triangle(const Vector2& pixel, const Vector2& v0, const Vector2& v1, const Vector2& v2, Vector3& weight)
+		{
+			Vector2 vertexToPixel{};
+			Vector2 currentEdge{};
+
+			vertexToPixel = pixel - v1;
+			currentEdge = v2 - v1;
+			float area1{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			if (area1 > 0)
+				return false;
+
+			vertexToPixel = pixel - v2;
+			currentEdge = v0 - v2;
+
+			float area2{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			if (area2 > 0)
+				return false;
+
+			vertexToPixel = pixel - v0;
+			currentEdge = v1 - v0;
+
+			float area3{ Vector2::Cross(vertexToPixel, currentEdge) };
+
+			if ( area3 > 0)
+				return false;
+
+			const float totalArea{ area1 +area2 + area3 };
+			weight.x = area1 / totalArea;
+			weight.y = area2 / totalArea;
+			weight.z = area3 / totalArea;
+
+			return true;
+		}
+
 	}
 }

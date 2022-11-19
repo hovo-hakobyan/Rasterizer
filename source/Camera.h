@@ -43,11 +43,18 @@ namespace dae
 
 		void CalculateViewMatrix()
 		{
-			//TODO W1
-			//ONB => invViewMatrix
-			//Inverse(ONB) => ViewMatrix
+			Matrix rot{ Matrix::CreateRotation(Vector3(totalPitch, totalYaw,0)) };
+			forward = rot.TransformVector(Vector3::UnitZ);
+			forward.Normalize();
 
-			//ViewMatrix => Matrix::CreateLookAtLH(...) [not implemented yet]
+			viewMatrix = Matrix::CreateLookAtLH(origin, forward, Vector3::UnitY);
+
+			
+
+			invViewMatrix = Matrix::Inverse(viewMatrix);
+
+			right = invViewMatrix.GetAxisX();
+			up = invViewMatrix.GetAxisY();
 			//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixlookatlh
 		}
 
@@ -62,6 +69,99 @@ namespace dae
 		void Update(Timer* pTimer)
 		{
 			const float deltaTime = pTimer->GetElapsed();
+			const float moveSpeed{ 17.f };
+			const float rotSpeed{ 4.5f };
+
+			//Keyboard Input
+			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
+
+			if (pKeyboardState[SDL_SCANCODE_W] || pKeyboardState[SDL_SCANCODE_UP])
+			{
+				origin += forward * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_S] || pKeyboardState[SDL_SCANCODE_DOWN])
+			{
+				origin -= forward * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_A] || pKeyboardState[SDL_SCANCODE_LEFT])
+			{
+				origin -= right * moveSpeed * deltaTime;
+			}
+			if (pKeyboardState[SDL_SCANCODE_D] || pKeyboardState[SDL_SCANCODE_RIGHT])
+			{
+				origin += right * moveSpeed * deltaTime;
+			}
+
+
+
+			//Mouse Input
+			int mouseX{}, mouseY{};
+			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+
+
+			if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT) && mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+			{
+				if (mouseY > 0)
+				{
+					origin -= up * moveSpeed * deltaTime;
+				}
+				if (mouseY < 0)
+				{
+					origin += up * moveSpeed * deltaTime;
+				}
+				if (mouseX > 0)
+				{
+					origin += right * moveSpeed * deltaTime;
+				}
+				if (mouseX < 0)
+				{
+					origin -= right * moveSpeed * deltaTime;
+				}
+
+			}
+			else if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT))
+			{
+				if (mouseY > 0)
+				{
+					origin -= forward * moveSpeed * deltaTime;
+				}
+				if (mouseY < 0)
+				{
+					origin += forward * moveSpeed * deltaTime;
+				}
+				if (mouseX < 0)
+				{
+					totalYaw -= rotSpeed * deltaTime;
+				}
+				if (mouseX > 0)
+				{
+					totalYaw += rotSpeed * deltaTime;
+				}
+			}
+			else if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT))
+			{
+				if (mouseX < 0)
+				{
+					totalYaw -= rotSpeed * deltaTime;
+
+				}
+				if (mouseX > 0)
+				{
+					totalYaw += rotSpeed * deltaTime;
+
+				}
+				if (mouseY > 0)
+				{
+					totalPitch -= rotSpeed * deltaTime;
+
+				}
+				if (mouseY < 0)
+				{
+					totalPitch += rotSpeed * deltaTime;
+
+				}
+			}
+		
 
 			//Camera Update Logic
 			//...
