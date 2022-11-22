@@ -49,8 +49,6 @@ namespace dae
 
 			viewMatrix = Matrix::CreateLookAtLH(origin, forward, Vector3::UnitY);
 
-			
-
 			invViewMatrix = Matrix::Inverse(viewMatrix);
 
 			right = invViewMatrix.GetAxisX();

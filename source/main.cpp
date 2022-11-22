@@ -71,7 +71,8 @@ int main(int argc, char* args[])
 		pRenderer->Update(pTimer);
 
 		//--------- Render ---------
-		pRenderer->Render();
+		//pRenderer->Render_Week1();
+		pRenderer->Render_Week2();
 
 		//--------- Timer ---------
 		pTimer->Update();

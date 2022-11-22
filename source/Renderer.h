@@ -29,7 +29,8 @@ namespace dae
 		Renderer& operator=(Renderer&&) noexcept = delete;
 
 		void Update(Timer* pTimer);
-		void Render();
+		void Render_Week1();
+		void Render_Week2();
 
 		bool SaveBufferToImage() const;
 
@@ -49,5 +50,10 @@ namespace dae
 
 		//Function that transforms the vertices from the mesh from World space to Screen space
 		void VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const; //W1 Version
+		void VertexTransformationFunction(std::vector<Mesh>& meshes) const; //W2 Version
+
+		void RenderTriangleList(const Mesh& currentMesh);
+		void RenderTriangleStrip(const Mesh& currentMesh);
+		void LoopOverPixels(const std::vector<Vertex_Out>& vertices);
 	};
 }

@@ -144,7 +144,7 @@ namespace dae {
 
 	Matrix Matrix::CreateLookAtLH(const Vector3& origin, const Vector3& forward, const Vector3& up)
 	{
-		//TODO W1
+
 		Vector3 zAxis = forward;
 		Vector3 xAxis = Vector3::Cross(up, zAxis).Normalized();
 		Vector3 yAxis = Vector3::Cross(zAxis, xAxis);
