@@ -39,7 +39,7 @@ namespace dae
 	private:
 		enum class RenderMode
 		{
-			FinalColor, DepthBuffer
+			FinalColor, DepthBuffer, Lambert, ObservedArea
 		};
 
 		SDL_Window* m_pWindow{};
@@ -52,6 +52,12 @@ namespace dae
 
 		Texture* m_pTextureGrid;
 		Texture* m_pTuktukTexture;
+
+		Texture* m_pVehicleDiffuse;
+		Texture* m_pVehicleNormal;
+		Texture* m_pVehicleSpecular;
+		Texture* m_pVehicleGloss;
+
 		Camera m_Camera{};
 
 		std::vector<Mesh> m_MeshesWorld;
@@ -61,6 +67,8 @@ namespace dae
 
 		RenderMode m_CurrentRenderMode{ RenderMode::FinalColor };
 
+		Vector3 m_LightDirection{ .577f,-.577f,.577f };
+
 		//Function that transforms the vertices from the mesh from World space to Screen space
 		void VertexTransformationFunction(const std::vector<Vertex>& vertices_in, std::vector<Vertex>& vertices_out) const; //W1 Version
 		void VertexTransformationFunction(Mesh& mesh) const; //W2 Version
@@ -68,6 +76,9 @@ namespace dae
 		void RenderTriangleList(const Mesh& currentMesh);
 		void RenderTriangleStrip(const Mesh& currentMesh);
 		void LoopOverPixels(const Vertex_Out& ver0, const Vertex_Out& ver1, const Vertex_Out& ver2);
+
+		void PixelShading(const Vertex_Out& v);
+
 
 		
 	};

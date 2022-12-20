@@ -209,5 +209,15 @@ namespace dae
 			return true;
 		}
 
+		/**
+		 * \param kd Diffuse Reflection Coefficient
+		 * \param cd Diffuse Color
+		 * \return Lambert Diffuse Color
+		 */
+		static ColorRGB Lambert(float kd, const ColorRGB& cd)
+		{
+			return { kd * cd / PI };
+		}
+
 	}
 }
