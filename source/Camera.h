@@ -48,16 +48,19 @@ namespace dae
 
 		void CalculateViewMatrix()
 		{
+			//ONB => invViewMatrix
+			//Inverse(ONB) => ViewMatrix
+
 			Matrix rot{ Matrix::CreateRotation(Vector3(totalPitch, totalYaw,0)) };
 			forward = rot.TransformVector(Vector3::UnitZ);
 			forward.Normalize();
 
-			viewMatrix = Matrix::CreateLookAtLH(origin, forward, Vector3::UnitY);
+			invViewMatrix = Matrix::CreateLookAtLH(origin, forward, Vector3::UnitY);
 
-			invViewMatrix = Matrix::Inverse(viewMatrix);
+			viewMatrix = Matrix::Inverse(invViewMatrix);
 
-			right = invViewMatrix.GetAxisX();
-			up = invViewMatrix.GetAxisY();
+			right = viewMatrix.GetAxisX();
+			up = viewMatrix.GetAxisY();
 			//DirectX Implementation => https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3dxmatrixlookatlh
 		}
 

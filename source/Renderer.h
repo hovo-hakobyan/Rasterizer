@@ -32,14 +32,17 @@ namespace dae
 		void Render_Week1();
 		void Render_Week2();
 
-		void ToggleRenderMode();
+		void ToggleRotation();
+		void ToggleShadingMode();
+		void ToggleDepthBuffer();
+		void ToggleNormalMap();
 
 		bool SaveBufferToImage() const;
 
 	private:
-		enum class RenderMode
+		enum class ShadingMode
 		{
-			FinalColor, DepthBuffer, Lambert, ObservedArea
+			Combined, Diffuse, ObservedArea, Specular, DepthBuffer
 		};
 
 		SDL_Window* m_pWindow{};
@@ -65,7 +68,10 @@ namespace dae
 		int m_Width{};
 		int m_Height{};
 
-		RenderMode m_CurrentRenderMode{ RenderMode::FinalColor };
+		ShadingMode m_CurrentShadingMode{ ShadingMode::Combined};
+		ShadingMode m_ShadingMode{ ShadingMode::Diffuse };
+		bool m_ShadeDepth;
+		bool m_UseNormalMap;
 
 		Vector3 m_LightDirection{ .577f,-.577f,.577f };
 

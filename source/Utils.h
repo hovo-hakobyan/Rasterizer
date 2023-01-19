@@ -182,6 +182,7 @@ namespace dae
 			currentEdge = v2 - v1;
 			float area1{ Vector2::Cross(vertexToPixel, currentEdge) };
 
+			//Left handed --> clockwise is positive
 			if (area1 > 0)
 				return false;
 
@@ -218,6 +219,9 @@ namespace dae
 		{
 			return { kd * cd / PI };
 		}
+
+
+
 
 	}
 }
